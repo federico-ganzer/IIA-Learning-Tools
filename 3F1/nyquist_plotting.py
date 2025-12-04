@@ -1,4 +1,6 @@
 """
+Full Credit to Richard Marquez Monteiro (rm967) (my 3f1 supervisor) for this code
+
 Nyquist plot for a discrete-time transfer function G(z).
 
 - Evaluates G(z) along the unit circle: z = exp(j*omega), omega in [0, 2*pi).
@@ -9,6 +11,7 @@ Nyquist plot for a discrete-time transfer function G(z).
 - Handles poles close to / on the unit circle by masking those points
   so the plot does not jump across asymptotes.
 - Chooses axis limits robustly using percentiles (outlier-resistant).
+
 """
 
 import numpy as np
