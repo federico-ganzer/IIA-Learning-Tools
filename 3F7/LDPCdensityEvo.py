@@ -6,38 +6,6 @@ def construct_poly(x, p):
     probs = p / np.sum(p)
     return np.sum(probs * x**(degrees - 1))
 
-def _density_evolution_regular_codes(epsilon, dv, dc, max_iter=100, tolerance=1e-12):
-    """
-    Compute error probability evolution for regular LDPC on BEC.
-    
-    Recursion: p_t = ε(1 - (1 - p_{t-1})^{d_c-1})^{d_v-1}
-    
-    Args:
-        epsilon: Erasure probability
-        dv: Variable degree
-        dc: Check degree
-        max_iter: Maximum iterations
-        tolerance: Convergence tolerance
-    
-    Returns:
-        history: List of dicts with {t, p, delta}
-    """
-    p = epsilon
-    history = [{'t': 0, 'p': p, 'delta': 0}]
-    
-    for t in range(1, max_iter + 1):
-        p_next = epsilon * (1 - (1 - p)**(dc - 1))**(dv - 1)
-        delta = abs(p_next - p)
-        history.append({'t': t, 'p': p_next, 'delta': delta})
-        p = p_next
-        
-        if delta < tolerance:
-            break
-    
-    return history
-
-    return history[-1]['p'] < threshold
-
 def is_converged(history, threshold=1e-10):
     final_p = history[-1]['p']
     return final_p < threshold
@@ -82,8 +50,8 @@ def density_evolution(eps, lambda_poly, rho_poly, max_iter= 1000, tol= 1e-10):
 # dv, dc = 3, 6 Generalise ie. create a polynomial constructor for irregular codes
 max_iter = 100
 
-lambda_poly = [0, 0, 1.0]      # λ(x) = x^2
-rho_poly    = [0, 0, 0, 0, 0, 1.0]  # ρ(x) = x^5
+lambda_poly = [0, 0, 1.0]      # lambda(x) = x^2
+rho_poly    = [0, 0, 0, 0, 0, 1.0]  # rho(x) = x^5
 
 dv = sum(i * p for i, p in enumerate(lambda_poly))  # Average variable degree
 dc = sum(i * p for i, p in enumerate(rho_poly))   # Average check degree
