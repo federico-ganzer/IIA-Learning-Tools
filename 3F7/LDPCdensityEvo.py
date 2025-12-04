@@ -72,7 +72,7 @@ def density_evolution(eps, lambda_poly, rho_poly, max_iter= 1000, tol= 1e-10):
     for _ in range(max_iter):
         inner = 1 -construct_poly(1 - x, rho_poly)
         x_next = eps * construct_poly(inner, lambda_poly)
-        history.append(x_next)
+        hist.append(x_next)
         if abs(x_next - x) < tol:
             break
         x = x_next
