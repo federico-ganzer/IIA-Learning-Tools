@@ -1,7 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def density_evolution(epsilon, dv, dc, max_iter=100, tolerance=1e-12):
+def construct_poly(x, p):
+    degrees = np.arange(1, len(p) + 1)
+    probs = p / np.sum(p)
+    return np.sum(probs * x**(degrees - 1))
+
+def _density_evolution_regular_codes(epsilon, dv, dc, max_iter=100, tolerance=1e-12):
     """
     Compute error probability evolution for regular LDPC on BEC.
     
@@ -31,10 +36,13 @@ def density_evolution(epsilon, dv, dc, max_iter=100, tolerance=1e-12):
     
     return history
 
-def is_converged(history, threshold=1e-3):
     return history[-1]['p'] < threshold
 
-def find_threshold_bisection(dv, dc, max_iter=1000, precision=1e-12):
+def is_converged(history, threshold=1e-10):
+    final_p = history[-1]['p']
+    return final_p < threshold
+
+def find_threshold_bisection(lambda_poly, rho_poly, max_iter=1000, precision=1e-12):
     """
     Find capacity threshold using binary search.
     
@@ -45,7 +53,7 @@ def find_threshold_bisection(dv, dc, max_iter=1000, precision=1e-12):
     
     for _ in range(max_iter):
         mid = (left + right) / 2
-        history = density_evolution(mid, dv, dc, max_iter)
+        history = density_evolution(mid, lambda_poly, rho_poly, max_iter)
         
         if is_converged(history):
             best_threshold = mid
@@ -58,19 +66,36 @@ def find_threshold_bisection(dv, dc, max_iter=1000, precision=1e-12):
     
     return best_threshold
 
-dv, dc = 3, 6
+def density_evolution(eps, lambda_poly, rho_poly, max_iter= 1000, tol= 1e-10):
+    x = eps
+    hist = [x]
+    for _ in range(max_iter):
+        inner = 1 -construct_poly(1 - x, rho_poly)
+        x_next = eps * construct_poly(inner, lambda_poly)
+        history.append(x_next)
+        if abs(x_next - x) < tol:
+            break
+        x = x_next
+    return np.array(hist)
+
+# dv, dc = 3, 6 Generalise ie. create a polynomial constructor for irregular codes
 max_iter = 100
 
-threshold = find_threshold_bisection(dv, dc)
+lamda_poly = [0, 0.5, 0.5]  # lamda(x) = 0.5x + 0.5x^2
+rho_poly = [0, 0, 1.0]      # rho(x) = x^2
+dv = sum(i * p for i, p in enumerate(lamda_poly))  # Average variable degree
+dc = sum(i * p for i, p in enumerate(rho_poly))   # Average check degree
+
+threshold = find_threshold_bisection(lamda_poly, rho_poly)
 print(f"Estimated threshold: {threshold:.6f}")
 print(f"Shannon limit: {1 - dv/dc:.4f}")
 print()
 
-epsilons = [0.40, 0.41, 0.42, 0.43]
+epsilons = [0.425, 0.426, 0.427, 0.43]
 fig, ax = plt.subplots(figsize=(10, 6))
 
 for eps in epsilons:
-    history = density_evolution(eps, dv, dc, max_iter)
+    history = density_evolution(eps, lamda_poly, rho_poly, max_iter)
     ts = [h['t'] for h in history]
     ps = [max(h['p'], 0) for h in history]   # avoid zeros on log scale
     ax.plot(ts, ps, marker='o', label=f'ε = {eps}', linewidth=2)
