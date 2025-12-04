@@ -67,26 +67,28 @@ def find_threshold_bisection(lambda_poly, rho_poly, max_iter=1000, precision=1e-
     return best_threshold
 
 def density_evolution(eps, lambda_poly, rho_poly, max_iter= 1000, tol= 1e-10):
-    x = eps
-    hist = [x]
-    for _ in range(max_iter):
-        inner = 1 -construct_poly(1 - x, rho_poly)
-        x_next = eps * construct_poly(inner, lambda_poly)
-        hist.append(x_next)
-        if abs(x_next - x) < tol:
+    p = eps
+    history = [{'t': 0, 'p': p, 'delta': 0}]
+    for t in range(max_iter):
+        inner = 1 -construct_poly(1 - p, rho_poly)
+        p_next = eps * construct_poly(inner, lambda_poly)
+        delta = abs(p_next - p)
+        history.append({'t': t, 'p': p_next, 'delta': delta})
+        if abs(p_next - p) < tol:
             break
-        x = x_next
-    return np.array(hist)
+        p = p_next
+    return np.array(history)
 
 # dv, dc = 3, 6 Generalise ie. create a polynomial constructor for irregular codes
 max_iter = 100
 
-lamda_poly = [0, 0.5, 0.5]  # lamda(x) = 0.5x + 0.5x^2
-rho_poly = [0, 0, 1.0]      # rho(x) = x^2
-dv = sum(i * p for i, p in enumerate(lamda_poly))  # Average variable degree
+lambda_poly = [0, 0, 1.0]      # λ(x) = x^2
+rho_poly    = [0, 0, 0, 0, 0, 1.0]  # ρ(x) = x^5
+
+dv = sum(i * p for i, p in enumerate(lambda_poly))  # Average variable degree
 dc = sum(i * p for i, p in enumerate(rho_poly))   # Average check degree
 
-threshold = find_threshold_bisection(lamda_poly, rho_poly)
+threshold = find_threshold_bisection(lambda_poly, rho_poly)
 print(f"Estimated threshold: {threshold:.6f}")
 print(f"Shannon limit: {1 - dv/dc:.4f}")
 print()
@@ -95,7 +97,7 @@ epsilons = [0.425, 0.426, 0.427, 0.43]
 fig, ax = plt.subplots(figsize=(10, 6))
 
 for eps in epsilons:
-    history = density_evolution(eps, lamda_poly, rho_poly, max_iter)
+    history = density_evolution(eps, lambda_poly, rho_poly, max_iter)
     ts = [h['t'] for h in history]
     ps = [max(h['p'], 0) for h in history]   # avoid zeros on log scale
     ax.plot(ts, ps, marker='o', label=f'ε = {eps}', linewidth=2)
