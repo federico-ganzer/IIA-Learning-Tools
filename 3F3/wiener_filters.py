@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.signal import wiener, welch, hann
-from scipy.fft import fft, ifft
+from scipy.signal import welch
 
 def local_wiener_filter(signal, window_size, noise_var = None):
     
@@ -39,14 +38,14 @@ def global_wiener_filter(signal, nperseg, noise_var = None):
     
     if noise_var is None:
         high_freq_idx = int(0.8 * len(x_psd))
-        noise_psd = np.median(x_psd[high_freq_idx:])
+        noise_psd = np.median(x_psd[high_freq_idx:]) # Heuristic measurement of noise PSD, median used to be robust against occasional residual peaks
     else:
         noise_psd = noise_var
 
     signal_psd = np.maximum(x_psd - noise_psd, 0)
     h_freq = signal_psd / np.maximum(x_psd, 1e-10)
     
-    fft_freqs = np.fft.rfftfreq(n, d=1.0)  # normalized frequencies
+    fft_freqs = np.fft.rfftfreq(n, d=1.0) 
     
     
     h_fft = np.interp(fft_freqs, freqs / (freqs[-1] if freqs[-1] > 0 else 1), h_freq)
@@ -72,12 +71,12 @@ noise = noise_std * np.random.randn(len(t))
 noisy = clean + noise
 true_noise_var = noise_std ** 2
 
-# Apply filters
+
 print("Computing filters...")
 y_local = local_wiener_filter(noisy, window_size=15, noise_var=true_noise_var)
 y_global = global_wiener_filter(noisy, noise_var=true_noise_var, nperseg=256)
 
-# Compute errors
+
 mse_noisy = np.mean((clean - noisy) ** 2)
 mse_local = np.mean((clean - y_local) ** 2)
 mse_global = np.mean((clean - y_global) ** 2)
@@ -88,7 +87,6 @@ print(f"MSE (global Wiener): {mse_global:.6f}")
 print(f"SNR improvement (local) : {10*np.log10(mse_noisy/mse_local):.2f} dB")
 print(f"SNR improvement (global): {10*np.log10(mse_noisy/mse_global):.2f} dB")
 
-# Plot: full signal
 fig, axes = plt.subplots(3, 1, figsize=(12, 8))
 
 ax = axes[0]
@@ -117,10 +115,8 @@ ax.legend()
 ax.grid(True, alpha=0.3)
 
 plt.tight_layout()
-plt.savefig('wiener_comparison_time.png', dpi=100)
 plt.show()
 
-# Plot: zoomed-in view (first 0.5 seconds)
 fig, axes = plt.subplots(3, 1, figsize=(12, 8))
 t_zoom = t < 0.5
 
@@ -152,16 +148,16 @@ ax.legend()
 ax.grid(True, alpha=0.3)
 
 plt.tight_layout()
-plt.savefig('wiener_comparison_zoom.png', dpi=100)
 plt.show()
 
-# Plot: frequency domain
 freqs, pxx_noisy = welch(noisy, fs=fs, nperseg=512)
 freqs, pxx_clean = welch(clean, fs=fs, nperseg=512)
+freqs, pxx_y_global = welch(y_global, fs=fs, nperseg=512)
 
 fig, ax = plt.subplots(figsize=(10, 5))
 ax.semilogy(freqs, pxx_clean, 'k-', linewidth=2, label='Clean signal PSD')
 ax.semilogy(freqs, pxx_noisy, 'b-', linewidth=1, alpha=0.7, label='Noisy signal PSD')
+ax.semilogy(freqs, pxx_y_global, 'r-', linewidth=1, alpha = 0.7, label= 'Filtered signal PSD (global)')
 ax.axhline(true_noise_var, color='r', linestyle='--', linewidth=1, label=f'Noise variance = {true_noise_var:.4f}')
 ax.set_xlabel('Frequency [Hz]')
 ax.set_ylabel('Power Spectral Density')
@@ -169,5 +165,4 @@ ax.set_title('Power Spectral Density (Welch)')
 ax.legend()
 ax.grid(True, alpha=0.3, which='both')
 plt.tight_layout()
-plt.savefig('wiener_psd.png', dpi=100)
 plt.show()
