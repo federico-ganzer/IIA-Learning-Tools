@@ -69,7 +69,7 @@ def build_G_from_pzk(zeros=None, poles=None, k=1.0):
 #     Example: zeros at z = -0.2; poles at z = 0 (origin) and 0.8; gain 0.5
 G, denom = build_G_from_pzk(
     zeros=[-2],
-    poles=[ 1/3, -1/2],  # pole near unit circle at 45 degrees
+    poles=[ 1/3, -1/2], 
     k=-1/6,
 )
 
