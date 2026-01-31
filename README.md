@@ -3,5 +3,6 @@ Repository of examples and implementations of topics and algorithms covered in l
 
 ## Courses:
 - 3F1: Signals and Systems
+- 3F2: Systems and Control
 - 3F3: Statistical Signal Processing
 - 3F7: Information Theory and Coding
