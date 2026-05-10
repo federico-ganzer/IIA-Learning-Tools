@@ -68,9 +68,9 @@ def build_G_from_pzk(zeros=None, poles=None, k=1.0):
 # (B) Poles/zeros/gain definition (uncomment and edit to use)
 #     Example: zeros at z = -0.2; poles at z = 0 (origin) and 0.8; gain 0.5
 G, denom = build_G_from_pzk(
-    zeros=[-2],
-    poles=[ 1/3, -1/2], 
-    k=-1/6,
+    zeros=[],
+    poles=[1, 1, 1], 
+    k=4,
 )
 
 # If you need to test a pole on the unit circle (e.g., at z = 1),

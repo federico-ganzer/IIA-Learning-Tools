@@ -9,14 +9,20 @@ y = np.linspace(-3, 3, 40)
 def func(z):
     return np.array([-z[0]**2 + z[1]**2, -z[0]**2 - z[1]**2 + 1])
 
+def func(z):
+    dotx1 = z[1]
+    dotx2 = -3*z[1] +3*(z[1]**2 + z[1]**2)*z[1] - z[0]
+    return np.array([dotx1, dotx2])
+
+
 X, Y = np.meshgrid(x, y)
 u, v = func([X, Y]) 
-
+'''
 def analytic_jacobian(pt):
     x0, y0 = pt
     return np.array([[-2*x0,  2*y0],
                      [-2*x0, -2*y0]])
-
+'''
 def numeric_jacobian(pt, eps=None):
     if eps is None:
         eps = np.sqrt(np.finfo(float).eps)
@@ -26,7 +32,7 @@ def numeric_jacobian(pt, eps=None):
 
 
 fig, ax = plt.subplots(figsize=(8, 6))
-ax.quiver(X, Y, u, v, scale=50, pivot='mid', color='teal')
+ax.quiver(X, Y, u, v, scale=30, pivot='mid', color='teal')
 
 def _norm(v):
     return v / (np.linalg.norm(v) + 1e-16)
@@ -44,7 +50,6 @@ def find_equilibria_numerical(func, guesses, tol=1e-8):
         
         if np.linalg.norm(func(z)) > 1e-6:
             continue
-        # deduplicate (real/complex-aware)
         dup = False
         for existing in found:
             if np.linalg.norm(np.asarray(existing['pt']).real - z) < tol:
